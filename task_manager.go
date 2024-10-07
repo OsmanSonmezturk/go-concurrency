@@ -41,7 +41,7 @@ func (tm *TaskManager) manageTasks() {
 				tm.mu.Unlock()
 				fmt.Printf("task started id: %d prio: %d \n", task.ID, task.Priority)
 
-				time.Sleep(5000 * time.Millisecond)
+				time.Sleep(3000 * time.Millisecond)
 			} else {
 				tm.mu.Unlock()
 				time.Sleep(100 * time.Millisecond)
