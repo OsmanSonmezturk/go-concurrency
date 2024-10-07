@@ -26,7 +26,7 @@ func main() {
 	}
 
 	go func() {
-		time.Sleep(time.Hour)
+		time.Sleep(time.Second * 20)
 		done <- struct{}{}
 	}()
 
