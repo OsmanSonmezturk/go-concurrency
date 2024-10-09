@@ -3,33 +3,23 @@ package main
 import (
 	"fmt"
 	"math/rand"
-	"time"
 )
 
 func main() {
-	done := make(chan struct{})
 	tm := NewTaskManager()
+	go tm.manageTasks()
 
-	for i := 0; i < 3; i++ {
-		go tm.manageTasks()
-	}
-
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 10; i++ {
 		task := &Task{
 			ID:       i,
 			Priority: rand.Intn(5),
 		}
 		tm.AddTask(task)
 		fmt.Printf("Added task %d with priority %d\n", task.ID, task.Priority)
-		// if you want to see what it does as new tasks are added.
-		time.Sleep(100 * time.Millisecond)
+
 	}
 
-	go func() {
-		time.Sleep(time.Second * 20)
-		done <- struct{}{}
-	}()
-
-	<-done
+	tm.wg.Wait()
+	close(tm.tasks)
 	fmt.Println("Program stopped.")
 }

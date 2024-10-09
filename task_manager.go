@@ -10,7 +10,7 @@ import (
 type TaskManager struct {
 	tasks     chan *Task
 	priorityQ PriorityQueue
-	mu        sync.Mutex
+	wg        sync.WaitGroup
 }
 
 func NewTaskManager() *TaskManager {
@@ -23,6 +23,7 @@ func NewTaskManager() *TaskManager {
 }
 
 func (tm *TaskManager) AddTask(task *Task) {
+	tm.wg.Add(1)
 	tm.tasks <- task
 }
 
@@ -30,37 +31,20 @@ func (tm *TaskManager) manageTasks() {
 	for {
 		select {
 		case task := <-tm.tasks:
-			tm.mu.Lock()
 			heap.Push(&tm.priorityQ, task)
-			tm.mu.Unlock()
 		default:
-			tm.mu.Lock()
 			if tm.priorityQ.Len() > 0 {
-				// tm.printPriorityQueue()
 				task := heap.Pop(&tm.priorityQ).(*Task)
-				tm.mu.Unlock()
-				fmt.Printf("task started id: %d prio: %d \n", task.ID, task.Priority)
-
-				time.Sleep(1000 * time.Millisecond)
+				go tm.processTask(task)
 			} else {
-				tm.mu.Unlock()
 				time.Sleep(100 * time.Millisecond)
 			}
 		}
 	}
 }
 
-func (tm *TaskManager) printPriorityQueue() {
-	if tm.priorityQ == nil {
-		fmt.Println("  Queue is nil")
-		return
-	}
-	for i, task := range tm.priorityQ {
-		if task != nil {
-			fmt.Printf("  %d: Task ID %d, Priority %d\n", i, task.ID, task.Priority)
-		} else {
-			fmt.Printf("  %d: nil task\n", i)
-		}
-	}
-	fmt.Println()
+func (tm *TaskManager) processTask(t *Task) {
+	fmt.Printf("task started id: %d prio: %d \n", t.ID, t.Priority)
+	time.Sleep(1000 * time.Millisecond) // task process
+	tm.wg.Done()
 }
