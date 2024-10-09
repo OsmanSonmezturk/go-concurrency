@@ -8,9 +8,10 @@ import (
 )
 
 type TaskManager struct {
-	tasks     chan *Task
-	priorityQ PriorityQueue
-	wg        sync.WaitGroup
+	tasks      chan *Task
+	priorityQ  PriorityQueue
+	wg         sync.WaitGroup
+	finishOnce sync.Once
 }
 
 func NewTaskManager() *TaskManager {
@@ -25,6 +26,15 @@ func NewTaskManager() *TaskManager {
 func (tm *TaskManager) AddTask(task *Task) {
 	tm.wg.Add(1)
 	tm.tasks <- task
+}
+
+func (tm *TaskManager) FinishAddingTasks() {
+	tm.finishOnce.Do(func() {
+		fmt.Println("Waiting for tasks to finish")
+		tm.wg.Wait()
+		fmt.Println("Closing task channel")
+		close(tm.tasks)
+	})
 }
 
 func (tm *TaskManager) manageTasks() {
